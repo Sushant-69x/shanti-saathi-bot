@@ -1,21 +1,20 @@
 {
-  "name": "shantisaathi-web",
-  "private": true,
-  "version": "2.0.0",
+  "name": "shantisaathi-backend",
+  "version": "1.0.0",
+  "description": "Backend server for ShāntiSaathi emotional wellness chatbot",
   "type": "module",
+  "main": "index.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "start": "node index.js",
+    "dev": "node index.js"
   },
+  "keywords": ["chatbot", "mental-health", "ai", "emotional-wellness"],
+  "author": "Sushant",
+  "license": "MIT",
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^5.4.11"
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "groq-sdk": "^0.3.2"
   }
 }
