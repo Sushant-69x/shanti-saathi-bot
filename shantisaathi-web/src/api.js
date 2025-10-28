@@ -3,7 +3,10 @@
 // Backend communication functions
 // ============================================================================
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.PROD 
+  ? 'https://shantisaathi-backend-3yo3.onrender.com/api'
+  : 'http://localhost:3000/api';
+
 
 /**
  * Send chat message to backend
