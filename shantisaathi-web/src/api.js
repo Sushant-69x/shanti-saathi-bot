@@ -86,8 +86,12 @@ export async function uploadFile(file) {
  */
 export async function checkHealth() {
   try {
-    const response = await fetch('http://localhost:3000/health');
-    
+    const healthUrl = import.meta.env.PROD 
+      ? 'https://shantisaathi-backend-3yo3.onrender.com/health'
+      : 'http://localhost:3000/health';
+      
+    const response = await fetch(healthUrl);
+
     if (!response.ok) {
       throw new Error('Server not responding');
     }
