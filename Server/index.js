@@ -43,10 +43,17 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174'],
+  origin: [
+    FRONTEND_URL, 
+    'http://localhost:5173', 
+    'http://localhost:5174',
+    'https://shantisaathi.vercel.app',
+    'https://shanti-saathi-epn2jq93u-sushants-projects-16bfb80c.vercel.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
+
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
