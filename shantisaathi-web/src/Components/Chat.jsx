@@ -1,6 +1,6 @@
 // ============================================================================
 // SHANTISAATHI - Chat Component
-// Complete working version with all features
+// Complete working version with all features + OPTIMIZATIONS
 // Lines: 750+
 // ============================================================================
 
@@ -166,10 +166,20 @@ function VoiceVisualizer({ isListening, audioLevel = 0 }) {
 }
 
 // ============================================================================
-// TTS FUNCTIONS
+// IMPROVED TTS FUNCTIONS WITH CONSISTENT FEMALE VOICE
 // ============================================================================
 
 const utteranceRef = { current: null };
+let voicesLoaded = false;
+
+// Load voices on startup
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.onvoiceschanged = () => {
+    voicesLoaded = true;
+  };
+  // Trigger voice loading
+  window.speechSynthesis.getVoices();
+}
 
 function speakTextWithFemaleVoice(text, language = 'hi-IN', isMuted = false) {
   if (!('speechSynthesis' in window) || isMuted) {
@@ -185,15 +195,33 @@ function speakTextWithFemaleVoice(text, language = 'hi-IN', isMuted = false) {
     const utterance = new SpeechSynthesisUtterance(cleanedText);
     utterance.lang = language;
     utterance.rate = 0.85;
-    utterance.pitch = 1.3;
+    utterance.pitch = 1.3; // Higher pitch for female voice
     utterance.volume = 0.9;
     
+    // Get available voices
     const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find(v => 
-      v.lang === language && /female|woman/i.test(v.name)
-    ) || voices.find(v => v.lang === language);
     
-    if (voice) utterance.voice = voice;
+    // Try to find a female voice for the language
+    const langCode = language.split('-')[0]; // Extract 'hi' from 'hi-IN'
+    
+    // Prioritize female voices
+    const femaleVoice = voices.find(v => 
+      v.lang.startsWith(langCode) && 
+      (v.name.toLowerCase().includes('female') || 
+       v.name.toLowerCase().includes('samantha') ||
+       v.name.toLowerCase().includes('google') ||
+       v.name.toLowerCase().includes('zira'))
+    );
+    
+    // Fallback to any voice for the language
+    const langVoice = voices.find(v => v.lang.startsWith(langCode));
+    
+    // Final fallback to default voice
+    const selectedVoice = femaleVoice || langVoice || voices[0];
+    
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
     
     utteranceRef.current = utterance;
     
