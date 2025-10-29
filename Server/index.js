@@ -187,6 +187,14 @@ const chatSchema = z.object({
 // API ENDPOINTS
 // ============================================================================
 
+// ============================================================================
+// PING ENDPOINT - Lightweight health check for cron jobs
+// ============================================================================
+
+app.get('/ping', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
