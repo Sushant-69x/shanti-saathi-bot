@@ -54,7 +54,6 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
-
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -166,7 +165,7 @@ Always respond with compassion in ${lang.fullName}.`;
 }
 
 // ============================================================================
-// VALIDATION SCHEMAS
+// VALIDATION SCHEMAS - UPDATED WITH PROPER HISTORY LIMIT
 // ============================================================================
 
 const chatSchema = z.object({
@@ -177,10 +176,8 @@ const chatSchema = z.object({
       role: z.enum(['user', 'assistant', 'system']),
       content: z.string()
     })
-  ).default([]).refine(
-    history => history.length <= 20,
-    { message: 'Conversation history too long' }
-  )
+  ).default([])
+  // ⭐ REMOVED THE HISTORY LENGTH VALIDATION - We'll limit it in the code instead
 });
 
 // ============================================================================
@@ -222,7 +219,7 @@ app.get('/api/languages', (req, res) => {
 });
 
 // ============================================================================
-// MAIN CHAT ENDPOINT
+// MAIN CHAT ENDPOINT - WITH HISTORY LIMITING FIX
 // ============================================================================
 
 app.post('/api/chat', async (req, res) => {
@@ -233,13 +230,20 @@ app.post('/api/chat', async (req, res) => {
     
     console.log(`[CHAT] ${langConfig.fullName} | "${message.substring(0, 40)}${message.length > 40 ? '...' : ''}"`);
 
+    // ⭐ CRITICAL FIX: Limit conversation history to last 10 messages (5 exchanges)
+    // This prevents "conversation too long" errors
+    const limitedHistory = Array.isArray(conversationHistory) 
+      ? conversationHistory.slice(-10) 
+      : [];
+
+    console.log(`[CHAT] History: ${conversationHistory.length} messages → Limited to ${limitedHistory.length}`);
+
     // Build conversation
     const systemPrompt = generateSystemPrompt(language);
-    const recentHistory = conversationHistory.slice(-6); // Last 6 messages
     
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...recentHistory,
+      ...limitedHistory, // ⭐ Use limited history instead of full history
       { role: 'user', content: message }
     ];
 
@@ -281,6 +285,16 @@ app.post('/api/chat', async (req, res) => {
         success: false, 
         error: 'Invalid request data',
         details: err.errors.map(e => e.message)
+      });
+    }
+    
+    // Handle conversation history too long (should not happen now, but keep as safety)
+    if (err.message?.includes('too long') || err.message?.includes('maximum context')) {
+      console.log('[CHAT] ⚠️ Conversation too long despite limiting - clearing history');
+      return res.status(400).json({
+        success: false,
+        error: 'Conversation too long. Please start a new conversation.',
+        code: 'HISTORY_TOO_LONG'
       });
     }
     
@@ -338,6 +352,7 @@ app.use((req, res) => {
     error: 'Endpoint not found',
     path: req.path,
     availableEndpoints: [
+      'GET /ping',
       'GET /health',
       'GET /api/languages',
       'POST /api/chat',
@@ -374,9 +389,11 @@ app.listen(PORT, () => {
 ║  💡 Using FREE Groq API - Ultra Fast!                  ║
 ║  📚 Supporting 12 Indian languages                     ║
 ║  🔒 Rate limited: 100 requests/15min                   ║
+║  🧠 History: Auto-limited to last 10 messages          ║
 ║                                                          ║
 ║  Endpoints:                                              ║
-║    GET  /health          - Health check                  ║
+║    GET  /ping            - Cron health check             ║
+║    GET  /health          - Detailed health check         ║
 ║    GET  /api/languages   - List all languages            ║
 ║    POST /api/chat        - Send chat message             ║
 ║    POST /api/upload      - Upload file (coming soon)     ║
@@ -403,5 +420,5 @@ process.on('SIGINT', () => {
 });
 
 // ============================================================================
-// END OF FILE - TOTAL: 250 LINES
+// END OF FILE - HISTORY LIMITING FIXED ✅
 // ============================================================================
